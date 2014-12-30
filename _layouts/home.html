@@ -1,0 +1,25 @@
+{% include header.html %}
+
+  {% include banner.html %}
+
+  <div class="wrapper">
+
+    {% include page-nav.html %}
+
+  <section>
+
+      <ul>
+          {% for post in site.posts %}
+          <li>
+              <a href="{{ post.url }}">{{ post.title }}</a>
+              <div class="excerpt">{{ post.excerpt }}</div>
+          </li>
+          {% endfor %}
+      </ul>
+
+      {{ content }}
+
+    </section>
+
+
+{% include footer.html %}
