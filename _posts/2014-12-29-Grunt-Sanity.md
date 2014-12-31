@@ -1,19 +1,141 @@
 ---
 layout: post
 title: Grunt sanity for large projects.
-excerpt: Is your project's Gruntfile growing rather quickly? Here's a strategy to keep it in check.
+excerpt: You don't design monolithic apps. Why should your build process be any different?
 ---
 
-#This is a test.
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.<br>
-Proin lobortis, turpis eget tincidunt ultrices, nibh ex maximus diam, non posuere quam neque in mi. Aliquam eros risus, consectetur imperdiet condimentum a, bibendum sed urna. Curabitur lacinia fringilla dictum. Nullam ullamcorper tincidunt mi, sit amet molestie est. Vivamus feugiat, odio vel pharetra lacinia, sapien tortor cursus mi, eu lacinia neque erat non ante. Aliquam rutrum porttitor orci, eu fringilla arcu. Curabitur sed porttitor lectus. Nulla pharetra, velit consectetur venenatis faucibus, odio ipsum accumsan enim, non varius est nunc eu enim.
+##Typical Structure
+Your project might looks something like this:
+<pre>
++-Gruntfile.js
+|
++-module_1
+|
++-module_2
+.
+.
+.
++-module_N
+</pre>
 
-##Proin nunc leo,
-vulputate ac neque eget, malesuada placerat risus. Vivamus non efficitur libero. Praesent auctor sem at tortor sodales mattis. Nullam iaculis venenatis felis, a viverra leo porttitor ac. Morbi sit amet lectus rutrum, dictum turpis quis, suscipit tellus. Mauris blandit aliquet tortor at laoreet. Aenean vel nibh nulla. Nunc sed purus velit. In egestas lectus vitae elementum rhoncus. Duis viverra leo cursus, imperdiet metus a, congue nisl.
+As you increase in complexity, your Gruntfile starts getting larger and harder to read. Let's face it; it might've started out simple
+(maybe just a linter), but after you've added template compilation, CSS pre-processing, custom scripts and more, it's getting
+hard to manage and troubleshoot.
 
-Praesent molestie, lorem vitae pharetra posuere, nulla leo tempor quam, et posuere elit nunc blandit lorem. Nunc cursus neque at iaculis vestibulum. Nam aliquet eget eros ac tempor. Cras tempus semper felis, ut varius nisi condimentum at. Donec dolor diam, laoreet ut tortor vel, volutpat blandit nulla. Praesent tempor lacinia purus non hendrerit. Quisque non purus nulla. Suspendisse potenti. Curabitur sit amet nibh nec ante imperdiet gravida. Integer mollis justo id vehicula consectetur. Donec a ex a quam maximus dapibus ac aliquam ante.
+In particular, your `initConfig()` section might be a sprawling mess.
 
-##Vestibulum ante ipsum primis
-in faucibus orci luctus et ultrices posuere cubilia Curae; Nam non maximus tellus. Vivamus vel elementum tellus, ut placerat tortor. Integer cursus ex ut ipsum pulvinar dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Donec tincidunt dolor ut purus posuere congue. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Ut feugiat tellus ut enim sagittis ultricies. Nunc varius placerat ullamcorper. Quisque a felis quis ante sollicitudin mollis at varius urna. Mauris eget est fringilla, varius nulla eget, auctor dolor. Donec hendrerit euismod odio, a commodo nulla blandit a. Donec vel tortor congue, porttitor odio nec, suscipit mi.
+##Shared configuration
+Starting with Grunt@0.4.6 you can now use `config.merge()` ([Documentation](http://gruntjs.com/api/grunt.config#grunt.config.merge)) inside a gruntfile, to incrementally set-up the configuration for your build.
 
-Maecenas accumsan enim vitae tortor suscipit, egestas porttitor purus rutrum. Ut vel volutpat diam, sit amet dictum augue. Vestibulum sagittis orci metus, ac faucibus arcu aliquet a. Pell
+To illustrate with an overly simple example, let's take this app as a starting point:
+<pre>
++-Gruntfile.js
+|
++-client+
+|       +-home.js
+|
++-server+
+        +-app.js
+</pre>
+
+
+It's got two modules, and let's say that our build process only cares about Linting the files.
+
+The gruntfile might look something like this:
+
+{% highlight javascript %}
+module.exports = function(grunt){
+    grunt.initConfig({
+        jshint:{
+            files:['client/home.js','server/app.js']
+        }
+    });
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.registerTask('lint', ['jshint']);
+    grunt.registerTask('default', ['lint']);
+}
+{% endhighlight %}
+
+
+In order to break down this build, we're going to add a new Gruntfile to each module
+
+<pre>
++-Gruntfile.js
+|
++-client+
+|       +-home.js
+|       +-Gruntfile.js
+|
++-server+
+        +-app.js
+        +-Gruntfile.js
+</pre>
+
+Each of these gruntfiles is going to add only the parts it cares about to the config by using `config.merge()`, in addition to
+using targets (eg: `jshint:client`) to further segregate what gets built.
+
+This would be one of the sub-gruntfiles:
+
+{% highlight javascript %}
+/* client/Gruntfile.js */
+
+module.exports = function(grunt){
+    grunt.config.merge({
+        jshint:{
+            client:{
+                src:[__dirname+'/home.js']
+            }
+        }
+    });
+
+    /*optional*/
+    grunt.registerTask('lint:client', ['jshint:client']);
+    grunt.registerTask('build:client', ['lint:client']);
+    /* optional */
+}
+{% endhighlight %}
+
+And this would be the new main gruntfile
+
+{% highlight javascript %}
+/* /Gruntfile.js */
+module.exports = function(grunt){
+
+    //Load downstream Gruntfiles
+    require('./client/Gruntfile')(grunt);
+    require('./server/Gruntfile')(grunt);
+
+    //Set up global tasks
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.registerTask('lint', ['jshint']);
+    grunt.registerTask('build', ['lint']);
+}
+{% endhighlight %}
+
+
+As you can see, the main gruntfile acts as an index for all the submodules, passing the `grunt` object to each one so the
+build can be incrementally configured. (Although it may very well be set up to run some tasks globally for the project).
+
+
+To invoke it, one would simply do
+{% highlight bash %}
+$ grunt build
+{% endhighlight %}
+
+This will invoke all targets for `build`
+
+
+##Building submodules
+Remember the optional block up there?  If you want to build individual components, you would simply pass that
+target as a parameter to grunt:
+{% highlight bash %}
+$ grunt build:client
+{% endhighlight %}
+
+This will only invoke the build target `client`, which is defined in one of the downstream files.
+
+##Live example
+
+[https://github.com/lmarkus/Example_ModularGrunt](https://github.com/lmarkus/Example_ModularGrunt)
+
+
