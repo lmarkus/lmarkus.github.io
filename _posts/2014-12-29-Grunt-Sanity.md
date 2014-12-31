@@ -27,7 +27,7 @@ In particular, your `initConfig()` section might be a sprawling mess.
 ##Shared configuration
 Starting with Grunt@0.4.6 you can now use `config.merge()` ([Documentation](http://gruntjs.com/api/grunt.config#grunt.config.merge)) inside a gruntfile, to incrementally set-up the configuration for your build.
 
-To illustrate with an overly simple example, let's take this app as a starting point:
+To illustrate with an overly simple example, let's take this project as a starting point:
 <pre>
 +-Gruntfile.js
 |
@@ -39,7 +39,7 @@ To illustrate with an overly simple example, let's take this app as a starting p
 </pre>
 
 
-It's got two modules, and let's say that our build process only cares about Linting the files.
+It's got two modules, and let's say that our build process only cares about linting the files.
 
 The gruntfile might look something like this:
 
@@ -52,7 +52,7 @@ module.exports = function(grunt){
     });
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.registerTask('lint', ['jshint']);
-    grunt.registerTask('default', ['lint']);
+    grunt.registerTask('build', ['lint']);
 }
 {% endhighlight %}
 
@@ -137,5 +137,6 @@ This will only invoke the build target `client`, which is defined in one of the 
 ##Live example
 
 [https://github.com/lmarkus/Example_ModularGrunt](https://github.com/lmarkus/Example_ModularGrunt)
+
 
 

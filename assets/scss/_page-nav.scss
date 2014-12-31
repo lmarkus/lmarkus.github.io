@@ -56,11 +56,16 @@ nav {
   }
 }
 
-#pageIndex {
+nav.pageIndex {
   margin-left: -600px;
 }
 
 #latestPosts {
   margin-left: 300px;
   text-align: right;
+
+  .tiny {
+    @include font-size(1.2);
+    @include line-height(1.6);
+  }
 }
