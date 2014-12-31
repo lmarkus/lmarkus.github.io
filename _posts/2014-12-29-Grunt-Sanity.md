@@ -4,6 +4,10 @@ title: Grunt sanity for large projects.
 excerpt: You don't design monolithic apps. Why should your build process be any different?
 ---
 
+You don't design monolithic apps. Why should your build process be any different?
+I was recently faced with a Gruntfile that was getting too large for it's own good. Here's one approach to break it down
+into smaller pieces.
+
 ##Typical Structure
 Your project might looks something like this:
 <pre>
