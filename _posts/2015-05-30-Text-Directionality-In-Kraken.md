@@ -198,7 +198,11 @@ Even though our conversion task correctly flipped the order and direction of the
 background image.
 
 If you have any image assets that are meant to be seen / read from left to right,  you *will* need to create a secondary set
-made for RTL consumption.
+made for RTL consumption. Lucky for us, the spritesheet that we used, already has a left-facing pacman and ghosts:
+
+![](/assets/images/pacman.png)
+
+We'll just have to adjust our bacground properties to display the right portion of the sprite.
 
 [This final commit](https://github.com/lmarkus/Kraken_Example_Text_Directionality/commit/e5f2ff0dc9699c203ae3b5fd3d704ecc2cbe5467) shows how a bit of clever programming can get you a long way.
 
